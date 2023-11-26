@@ -44,7 +44,7 @@ public:
             quicksort(nums,L,i-1,k); // 多了，去左边找最小的k个数
     }
     vector<int> getLeastNumbers(vector<int>& arr, int k) {
-        srand((unsigned)time(nullptr)); // 设置随机数种子
+        // srand((unsigned)time(nullptr)); // 设置随机数种子
         quicksort(arr,0,arr.size()-1,k);
         vector<int> res;
         for(int i=0;i<k;i++) // 获取最小的前k个数
