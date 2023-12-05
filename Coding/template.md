@@ -4,6 +4,8 @@
 
 ## 题目
 
+![Alt text](https://github.com/yang-yang-o-o/CodingNotes/blob/main/Coding/asset/48_1.png)  
+
 ---
 
 ## 思路
