@@ -1,0 +1,50 @@
+# [剑指 Offer 62. 圆圈中最后剩下的数字](https://leetcode.cn/problems/yuan-quan-zhong-zui-hou-sheng-xia-de-shu-zi-lcof/description/)
+
+---
+
+## 题目 (简单)
+
+社团共有 num 为成员参与破冰游戏，编号为 0 ~ num-1。成员们按照编号顺序围绕圆桌而坐。社长抽取一个数字 target，从 0 号成员起开始计数，排在第 target 位的成员离开圆桌，且成员离开后从下一个成员开始计数。请返回游戏结束时最后一位成员的编号。  
+
+示例 1：  
+
+```markdown
+输入：num = 7, target = 4
+输出：1
+```
+
+示例 2：  
+
+```markdown
+输入：num = 12, target = 5
+输出：0
+```
+
+提示：  
+
+- 1 <= num <= 10^5
+- 1 <= target <= 10^6
+
+---
+
+## 思路
+
+---
+
+## 代码
+
+```C++
+class Solution {
+public:
+    int lastRemaining(int n, int m) {
+        int f = 0;// 有1个元素时最后剩下的是第0个元素
+        for (int i = 2; i != n + 1; ++i) {// 没有有i个元素数最后剩下的是这i个元素中的第几个
+            f = (m + f) % i;// 因为下一次是从上一次删除的元素后面开始从0开始计数的，因此从下一
+            // 次反算上一次需要加上m，f是最后的元素在下一次中的下标，这个下标的0位置就是上一次的下标为m的位置，
+            // 下标从0开始，删除的是下标m-1的元素
+            // 因此f反算到上一次，需要加m
+        }
+        return f;
+    }
+};
+```
