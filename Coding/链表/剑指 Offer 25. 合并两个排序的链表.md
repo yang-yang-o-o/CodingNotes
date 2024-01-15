@@ -51,39 +51,12 @@ struct ListNode {
     ListNode(int x, ListNode *next) : val(x), next(next) {}
 };
 
-class Solution25 {
-public:
-    ListNode* merge(ListNode* head1, ListNode* head2) {// 合并两个有序链表
-        ListNode* dummyHead = new ListNode(0);// 虚拟头结点
-        ListNode* temp = dummyHead, *temp1 = head1, *temp2 = head2;
-        // 使用双指针的形式合并
-        while (temp1 != nullptr && temp2 != nullptr) {
-            if (temp1->val <= temp2->val) {
-                temp->next = temp1;
-                temp1 = temp1->next;
-            } else {
-                temp->next = temp2;
-                temp2 = temp2->next;
-            }
-            temp = temp->next;
-        }
-        // 将某个链表剩下的节点直接接到结果尾部
-        if (temp1 != nullptr) {
-            temp->next = temp1;
-        } else if (temp2 != nullptr) {
-            temp->next = temp2;
-        }
-        // 返回合并后的有序链表
-        return dummyHead->next;
-    }
-};
-// 自己写的解法
 class Solution {
 public:
-    ListNode* mergeTwoLists(ListNode* l1, ListNode* l2) {
-        ListNode* head = new ListNode();
+    ListNode* mergeTwoLists(ListNode* l1, ListNode* l2) { // 合并两个有序链表
+        ListNode* head = new ListNode(); // 虚拟头结点
         ListNode* tmp = head;
-        while(l1!=nullptr && l2!=nullptr){
+        while(l1!=nullptr && l2!=nullptr){ // 使用双指针的形式合并
             if(l1->val < l2->val){
                 tmp->next = l1;
                 l1 = l1->next;
@@ -94,11 +67,12 @@ public:
             }
             tmp = tmp->next;
         }
+        // 将某个链表剩下的节点直接接到结果尾部
         if(l1!=nullptr)
             tmp->next = l1;
         if(l2!=nullptr)
             tmp->next = l2;
-        return head->next;
+        return head->next; // 返回合并后的有序链表
     }
 };
 ```

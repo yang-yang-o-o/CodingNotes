@@ -54,6 +54,8 @@
 
 ## 代码
 
+### 1. 递归解法
+
 ```C++
 struct ListNode {
     int val;
@@ -90,6 +92,13 @@ public:
         return node;
     }
 };
+```
+
+### 2. 迭代解法
+
+![Alt text](https://github.com/yang-yang-o-o/CodingNotes/blob/main/Coding/asset/offer_35_4.png)
+
+```C++
 class Solution {            // 迭代解法
 public:
     Node* copyRandomList(Node* head) {
@@ -110,7 +119,7 @@ public:
         Node* oldlist = head;
         Node* newlist = head->next;
         Node* tmp = head->next;
-        while(oldlist!=nullptr){// 复制next
+        while(oldlist!=nullptr){// 拆分
             oldlist->next = oldlist->next->next;
             newlist->next = (newlist->next==nullptr)?nullptr:newlist->next->next;
             oldlist = oldlist->next;
