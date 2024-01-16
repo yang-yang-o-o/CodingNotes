@@ -12,13 +12,15 @@
 请编写一个程序返回这个密码。
 
 示例 1:  
-```
+
+```markdown
 输入: password = [15, 8, 7]
 输出: "1578"
 ```
 
 示例 2:  
-```
+
+```markdown
 输入: password = [0, 3, 30, 34, 5, 9]
 输出: "03033459"
 ```
@@ -41,32 +43,6 @@
 ## 代码
 
 ```C++
-class Solution {
-public:
-    string minNumber(vector<int>& nums) {
-        vector<string> strs;
-        for(int i = 0; i < nums.size(); i++)
-            strs.push_back(to_string(nums[i]));
-        quickSort(strs, 0, strs.size() - 1);
-        string res;
-        for(string s : strs)
-            res.append(s);
-        return res;
-    }
-private:
-    void quickSort(vector<string>& strs, int l, int r) {
-        if(l >= r) return;
-        int i = l, j = r;
-        while(i < j) {
-            while(strs[j] + strs[l] >= strs[l] + strs[j] && i < j) j--;
-            while(strs[i] + strs[l] <= strs[l] + strs[i] && i < j) i++;
-            swap(strs[i], strs[j]);
-        }
-        swap(strs[i], strs[l]);
-        quickSort(strs, l, i - 1);
-        quickSort(strs, i + 1, r);
-    }
-};
 // 自己写的解法             快速排序
 class Solution {
 public:
@@ -83,8 +59,8 @@ public:
             if(less_(nums[j],nums[R]))
                 swap(nums[j],nums[++i]);
         swap(nums[R],nums[++i]);
-        quicksort(nums,L,i-1);
-        quicksort(nums,i+1,R);
+        quicksort(nums, L, i-1);
+        quicksort(nums, i+1, R);
     }
     string minNumber(vector<int>& nums) {
         srand((unsigned)time(nullptr));
