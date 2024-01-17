@@ -26,6 +26,10 @@
 
 ## 思路
 
+1、暴力解法：依次用2、3、5不断的整除num，直到不能整除，此时如果num==1了，说明num就只由2、3、5相乘得到，就是丑数
+
+2、动态规划：每个丑数都分别乘以2、3、5，结果就是一个新的丑数
+
 ---
 
 ## 代码
@@ -46,22 +50,6 @@ public:
 数都已经乘过一次2了，下次应该乘2的是第a个数；b表示前(b-1)个数都已经乘过一次3了，
 下次应该乘3的是第b个数；c表示前(c-1)个数都已经乘过一次5了，下次应该乘5的是第c个数；
 */
-class Solution {
-public:
-    int nthUglyNumber(int n) {
-        int a = 0, b = 0, c = 0;
-        int dp[n];
-        dp[0] = 1;
-        for(int i = 1; i < n; i++) {
-            int n2 = dp[a] * 2, n3 = dp[b] * 3, n5 = dp[c] * 5;
-            dp[i] = min(min(n2, n3), n5);
-            if(dp[i] == n2) a++;
-            if(dp[i] == n3) b++;
-            if(dp[i] == n5) c++;
-        }
-        return dp[n - 1];
-    }
-};
 // 自己写的解法
 class Solution {
 public:

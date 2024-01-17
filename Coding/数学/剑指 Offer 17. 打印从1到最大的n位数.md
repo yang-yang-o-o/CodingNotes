@@ -36,7 +36,7 @@ public:
             res.push_back(tmp.substr(start));
             return;
         }
-        for(int i=0;i<=9;i++){// 每一位有9种选择
+        for(int i=0;i<=9;i++){// 每一位有10种选择
             tmp[idx] = (char)(i+'0');// 注意这种字符构造方法
             dfs(res,tmp,idx+1);
         }
