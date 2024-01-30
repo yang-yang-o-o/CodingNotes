@@ -36,21 +36,20 @@ push(5), pop() -> 5, pop() -> 3, pop() -> 2, pop() -> 1
 
 ## 思路
 
+用一个新栈s来实时模拟进出栈操作：  
+
+在for里依次喂数，每push一个数字就检查有没有能pop出来的。  
+
+如果最后s为空，说明一进一出刚刚好。  
+
+时间复杂度分析：一共push n次，pop n次。  
+
 ---
 
 ## 代码
 
 ```C++
 class Solution31 {
-    /*
-    用一个新栈s来实时模拟进出栈操作：
-
-    在for里依次喂数，每push一个数字就检查有没有能pop出来的。
-
-    如果最后s为空，说明一进一出刚刚好。
-
-    时间复杂度分析：一共push n次，pop n次。
-    */
 public:
     bool validateStackSequences(vector<int>& pushed, vector<int>& popped) {
         if(pushed.size() != popped.size()) return false;
@@ -75,7 +74,7 @@ public:
         stack<int> tmp;
         int n = popped.size();
         int j=0;
-        for(int i=0;i<pushed.size();i++){
+        for(int i=0; i<pushed.size(); i++){
             tmp.push(pushed[i]);
             while(!tmp.empty() && j<n && tmp.top() == popped[j]){// 这里!tmp.empty() 和 j<n 其实是等价的，j<n可以不要，
                                                                  // 但是!tmp.empty()一定要，这是因为这个条件一定是先不成立的
