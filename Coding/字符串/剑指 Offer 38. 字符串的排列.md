@@ -9,7 +9,8 @@
 返回结果 无顺序要求，但不能含有重复的元素。  
 
 示例 1:  
-```
+
+```markdown
 输入：goods = "agew"
 输出：["aegw","aewg","agew","agwe","aweg","awge","eagw","eawg","egaw","egwa","ewag","ewga","gaew","gawe","geaw","gewa","gwae","gwea","waeg","wage","weag","wega","wgae","wgea"]
 ```
