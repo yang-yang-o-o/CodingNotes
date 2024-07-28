@@ -65,24 +65,4 @@ public:
         return stk.empty();
     }
 };
-// 自己写的解法
-class Solution {
-public:
-    bool validateStackSequences(vector<int>& pushed, vector<int>& popped) {
-        if(pushed.size()!=popped.size())
-            return false;
-        stack<int> tmp;
-        int n = popped.size();
-        int j=0;
-        for(int i=0; i<pushed.size(); i++){
-            tmp.push(pushed[i]);
-            while(!tmp.empty() && j<n && tmp.top() == popped[j]){// 这里!tmp.empty() 和 j<n 其实是等价的，j<n可以不要，
-                                                                 // 但是!tmp.empty()一定要，这是因为这个条件一定是先不成立的
-                tmp.pop();
-                j++;
-            }
-        }
-        return j==n;
-    }
-};
 ```
