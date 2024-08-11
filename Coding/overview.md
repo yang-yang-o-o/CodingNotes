@@ -3775,11 +3775,14 @@ public:
 // 空间复杂度：**O(n)**
 ```
 
-### medium[406.根据身高重建队列](../Coding\数组\中等\406.根据身高重建队列.md)
+### medium[406.根据身高重建队列](../Coding/数组/中等/406.根据身高重建队列.md)
 
 ```C++
 /*
-    到这
+    对数组排序，使得数组中每个元素为(hi,ki)，hi为元素的值，前面大于hi的有ki个
+    排序
+        - 先按hi降序，ki升序排序
+        - 然后将每个元素插入到结果list下标为ki的位置
 */
 class Solution {
 public:
@@ -3787,7 +3790,8 @@ public:
         return a[0] > b[0] || (a[0]==b[0] && a[1] < b[1]); // 按hi降序，ki升序排序
     }
     void quicksort(vector<vector<int>>& nums,int L,int R){
-        if(L>=R)return;
+        if(L>=R)
+            return;
         int P = rand()%(R-L+1)+L;
         swap(nums[R],nums[P]);
         int i = L-1;
@@ -3799,11 +3803,13 @@ public:
         quicksort(nums,i+1,R);
     }
     vector<vector<int>> reconstructQueue(vector<vector<int>>& people) {
-        srand((unsigned)time(nullptr));
+        // srand((unsigned)time(nullptr));
         quicksort(people,0,people.size()-1);
+
         vector<vector<int>> res;
         for(vector<int> p:people)
-            res.insert(res.begin()+p[1],p);//插入到i[1]的位置，前面有i[1]个人高于i，且后面再插入的人不会影响i的正确性，因为都比i矮
+            res.insert(res.begin()+p[1],p); //插入到i[1]的位置，前面有i[1]个人高于i，且后面再插入的人不会影响i的正确性，因为都比i矮
+
         return res;
     }
 };
@@ -3811,27 +3817,29 @@ public:
 // 空间复杂度：**O(1)**
 ```
 
-### medium[416.分割等和子集](../Coding\数组\中等\416.分割等和子集.md)
+### medium[416.分割等和子集](../Coding/数组/中等/416.分割等和子集.md)
 
 ```C++
 /*
+    判断是否可以将数组`分割成两个子集`，使得两个子集的`元素和相等`
+    动态规划
 */
 class Solution {
 public:
     bool canPartition(vector<int>& nums) {
-        // 如果元素小于2，返回false
+        // 如果元素个数小于2，返回false
         int n = nums.size();
         if (n < 2) {
             return false;
         }
-        // 计算数组的和
+        // 计算数组的 和 以及 最大值
         int sum = 0, maxNum = 0;
         for (auto& num : nums) {
             sum += num;
             maxNum = max(maxNum, num);
         }
         // 如果和为奇数，则不可能分为等和的两部分，返回false
-        if(sum%2!=0)
+        if(sum%2 != 0)
             return false;
         // 如果和的一半小于最大的元素，也就是说包含最大值或者不包含最大值都不肯定等于和的一半，返回false
         int target = sum / 2;
@@ -3839,14 +3847,17 @@ public:
             return false;
         }
 
-        vector<int> dp(target + 1, 0);// 初始时，dp 中的全部元素都是 false。
-        dp[0] = true; // dp[i] 表示是否可以在nums中找到一个子集，和为i，可以则为true。
-        for (int i = 0; i < n; i++) {// 遍历每个元素，依次考虑
+        // dp[i] 表示是否可以在nums中找到一个子集，和为i，可以则为true。
+        vector<int> dp(target + 1, 0);
+        dp[0] = true;
+        for (int i = 0; i < n; i++) { // 遍历每个元素，依次考虑
             int num = nums[i];
-            for (int j = target; j >= num; --j) {//需要从大到小计算，因为如果我们从小到大更新 dp 值，那么在计算 dp[j] 值的时候，dp[j−nums[i]] 已经是被更新过的状态，不再是上一次的 dp 值。
+            // 子集包含 num 时，可能的 和
+            for (int j = target; j >= num; --j) { // 需要从大到小计算，因为如果我们从小到大更新 dp 值，那么在计算 dp[j] 值的时候，dp[j−nums[i]] 已经是被更新过的状态，不再是上一次的 dp 值。
                 dp[j] |= dp[j - num];
             }
         }
+
         return dp[target];
     }
 };
@@ -3854,29 +3865,39 @@ public:
 // 空间复杂度：**O(target)**
 ```
 
-### medium[494.目标和](../Coding\数组\中等\494.目标和.md)
+### medium[494.目标和](../Coding/数组/中等/494.目标和.md)
 
 ```C++
 /*
+    在每个元素之前添加﹢号或者-号，构成一个表达式，求结果等于target的表达式的数目
+    动态规划
 */
 class Solution {
 public:
     int findTargetSumWays(vector<int>& nums, int S) {
-        vector<int> dp(2001,0); // dp[i] 表示当前考虑范畴内的所有元素可以组合得到i的总组合个数
-        // 先把第一个元素加入考虑范畴
+        vector<int> dp(2001,0); // dp[i+1000] 表示结果等于 i 的表达的数目
+
+        // 考虑第一个元素
         dp[nums[0]+1000] = 1;
         dp[-nums[0]+1000] += 1; // 注意这里要用+=,如果nums[0]为0的话，正负是相等的
-        // 再把剩下的元素依次加入考虑范畴
-        for(int i =1;i<nums.size();i++){ // 从第二元素开始考虑
+
+        // 考虑剩下的元素
+        for(int i =1;i<nums.size();i++){
+            // 新状态数组
             vector<int> next(2001,0);
-            for(int j=0;j<=2000;j++){ // 遍历所有状态，更新状态
-                if(j-nums[i]>=0 && j-nums[i]<=2000) // 表示nums[i]在表达式中取正，这里这两个边界判定不能漏
-                    next[j] += dp[j-nums[i]]; // 注意这里要用+=,如果nums[i]为0的话，正负是相等的
-                if(j+nums[i]>=0 && j+nums[i]<=2000) // 表示nums[i]在表达式中取负，这里这两个边界判定不能漏
-                    next[j] += dp[j+nums[i]]; // 注意这里要用+=,如果nums[i]为0的话，正负是相等的
+            // 遍历新状态数组中每种状态
+            for(int j=0;j<=2000;j++){
+                // nums[i]在表达式中取正
+                if(j-nums[i]>=0 && j-nums[i]<=2000) // 边界判断
+                    next[j] = dp[j-nums[i]];
+                // nums[i]在表达式中取负
+                if(j+nums[i]>=0 && j+nums[i]<=2000) // 边界判断
+                    next[j] += dp[j+nums[i]]; // 注意这里要用+=，在上面的if的基础上再增加
             }
+
             dp = next;
         }
+
         return dp[S+1000];
     }
 };
