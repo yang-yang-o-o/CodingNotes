@@ -3869,24 +3869,24 @@ public:
 
 ```C++
 /*
-    在每个元素之前添加﹢号或者-号，构成一个表达式，求结果等于target的表达式的数目
+    在每个元素之前添加﹢号或者-号，构成一个表达式，求结果等于target的表达式的总数目
     动态规划
 */
 class Solution {
 public:
     int findTargetSumWays(vector<int>& nums, int S) {
-        vector<int> dp(2001,0); // dp[i+1000] 表示结果等于 i 的表达的数目
+        vector<int> dp(2001,0); // dp[i+1000] 表示结果等于 i 的表达式的数目，target在[-1000, 1000]之间
 
         // 考虑第一个元素
         dp[nums[0]+1000] = 1;
         dp[-nums[0]+1000] += 1; // 注意这里要用+=,如果nums[0]为0的话，正负是相等的
 
         // 考虑剩下的元素
-        for(int i =1;i<nums.size();i++){
+        for(int i =1; i<nums.size(); i++){
             // 新状态数组
             vector<int> next(2001,0);
-            // 遍历新状态数组中每种状态
-            for(int j=0;j<=2000;j++){
+            // 状态转移，根据dp求next
+            for(int j=0; j<=2000; j++){
                 // nums[i]在表达式中取正
                 if(j-nums[i]>=0 && j-nums[i]<=2000) // 边界判断
                     next[j] = dp[j-nums[i]];
@@ -3909,21 +3909,28 @@ public:
 
 ```C++
 /*
+    求和为 k 的子数组的个数
+    前缀和 + 哈希表优化
 */
 class Solution {
 public:
     int subarraySum(vector<int>& nums, int k) {
-        unordered_map<int,int> dp; // 前缀和为键，和出现的次数为值
+        unordered_map<int,int> dp; // 前缀和(下标[0,i]元素的和) 为键，值为 该前缀和出现的次数
         dp[0] = 1; // 和为0，出现1次，就是子数组为空
-        int count = 0,pre = 0; // count表示和为k的子数组总个数，pre表示当前遍历过的元素的总和
-        for(int i=0;i<nums.size();i++){
+
+        int count = 0;  // count表示 和为k 的子数组 总个数
+        int pre = 0;    // pre表示 当前遍历过的 元素的总和
+        for(int i=0; i<nums.size(); i++){
             pre += nums[i];
-            if(dp.find(pre-k)!=dp.end()) // 如果前缀和pre-k存在，那么前缀和pre-k对应的右边界下标i到前缀和pre对应的右边界下标j之间的连续子数组nums[i,j]的和就为k
-                count += dp[pre-k]; // 因为此时下标j是确定的，那么有多少种下标i就有多少种和为k的子数组，所以count += mp[pre - k]
-            dp[pre] ++; // 将当前的前缀和pre加入到哈希表，这里直接用++，是因为不同的下标j可能有相同的前缀和pre，但是因为下标j不同，最终的子数组也不同，所有都要加到count上。
+
+            if(dp.find(pre-k) != dp.end())
+                count += dp[pre-k]; // 有多少个前缀和等于 pre-k，就有多少个以位置 i 结尾的和为 k 的子数组
+
+            dp[pre]++; // 这里直接用++，是因为不同的 末尾位置i 可能对应相同的 前缀和pre，而且必须在更新count之后++
         }
+
         return count;
-    }   
+    }
 };
 // 时间复杂度：**O(n)**  
 // 空间复杂度：**O(n)**
@@ -3933,6 +3940,15 @@ public:
 
 ```C++
 /*
+    两个相同种类的任务之间必须有长度为整数n的冷却时间，计算`完成所有任务所需要的最短时间`
+    想象一下，将每种任务排成单独一列，不同任务之间在列方向堆叠，  
+        ABCDEF  
+        ABCDEF  
+        AB  
+        从左到右从上到下依次执行，最短执行之间为 `max(len,maxnum+(maxcount-1)*(n+1))`，  
+        其中`len`为总的任务个数，`maxnum`为最后一行的任务个数，`maxcount`为行数，`n`为冷却时间，`n+1`表示可再一次执行任务A所需的时间。  
+        如果`列数小于n+1`，那么两次执行任务A之间`必然会有待命`，此时当取比len更大的`maxnum+(maxcount-1)*(n+1)`，就是`行乘列再加最后一行`，  
+        如果`列数大于n+1`，那么两次执行任务A之间`不会存在待命`，此时直接取`len`。  
 */
 class Solution {
 public:
@@ -3943,17 +3959,16 @@ public:
 
         int maxcount = INT_MIN;
         int maxnum = 0;
-        for(int i=0;i<26;i++) // 贪心维护具有相同的最大数量(maxcount)的任务个数(maxnum)
-            if(cnt[i]>maxcount){
+        for(int i=0; i<26; i++) { // 贪心维护 最大数(maxcount) 及其 出现次数(maxnum)
+            if(cnt[i]>maxcount) {
                 maxcount = cnt[i];
                 maxnum = 1;
             }
             else if(cnt[i]==maxcount)
                 maxnum++; // 统计最后一行的任务数
+        }
 
-        int len = tasks.size();
-        return max(len,maxnum+(maxcount-1)*(n+1)); // 在任意的情况下，需要的最少时间就是(maxcount−1)(n+1)+maxnum 和 ∣task∣ 中的较大值
-                                                   // n+1代表列，(maxcount−1)代表去掉最后一个行剩下的行
+        return max(tasks.size(), maxnum+(maxcount-1)*(n+1)); // n+1代表列，(maxcount−1)代表去掉最后一个行剩下的行
     }
 };
 // 时间复杂度：**O(nlogn)**  
@@ -3964,20 +3979,24 @@ public:
 
 ```C++
 /*
+    对于每天的温度，求下一个更高温度出现在几天后
+    单调栈：非递增栈
 */
 class Solution {
 public:
     vector<int> dailyTemperatures(vector<int>& T) {
-       int n = T.size();
-       vector<int> res(n); // 默认值为0
+       vector<int> res(T.size(),0);
+
        stack<int> s;// 单调栈存储的是下标
-       for(int i=0;i<n;i++){
-           while(!s.empty() && T[i] > T[s.top()]){ // 如果栈不为空并且当前元素大于栈顶元素，那么当前温度就是栈顶温度所要等待的温度
-               res[s.top()] = i-s.top(); // 更新栈顶元素需要等待的天数
-               s.pop(); // 栈顶元素已经计算过了，就出栈
-           }
-           s.push(i); // 将当前温度加入栈
-       } 
+       for(int i=0; i<T.size(); i++) {
+            while(!s.empty() && T[i] > T[s.top()]) { // 当前元素大于栈顶元素就出栈
+                res[s.top()] = i-s.top(); // 当前温度 就是 栈顶温度 所要等待的 温度
+                s.pop();
+            }
+
+            s.push(i); // 将当前温度加入栈
+       }
+
        return res;
     }
 };
@@ -3989,16 +4008,22 @@ public:
 
 ```C++
 /*
+    除了两个数字只出现了一次，其他数字都出现了两次。找出这两个只出现一次的数字。
+    位运算：
+        位异或，相异为1，相同为0.  
+        注意：`a ^ a ^ b ^ b ^ c = c`
 */
 class Solution {
 public:
     vector<int> singleNumbers(vector<int>& nums) {
         int ret = 0;
         for(int i:nums)
-            ret ^=i; // 最终ret是两个只出现一次的数的异或结果
+            ret ^= i; // 最终ret是两个只出现一次的数的异或结果
+
         int div = 1;
         while((ret&div)==0) // 找到ret最右边为1的那一位，两个只出现一次的数在这一位上是不同的，记为第x位
             div = (div << 1); 
+
         int a=0,b=0;
         for(int i:nums){ // 第x位为0的异或到a上，为1的异或到b上
             if((i&div) == 0)
@@ -4006,6 +4031,7 @@ public:
             else
                 b ^= i;
         }
+
         return vector<int>{a,b}; // 最终a和b就是只出现一次的两个数字
     }
 };
@@ -4017,17 +4043,25 @@ public:
 
 ```C++
 /*
+    除某个元素仅出现`一次`外，其余每个元素都恰出现`三次`，求只出现一次的数字
+    统计所有数每个`bit位 出现的 次数`。  
+        再把每个位的`次数 % 3`，也就算出，只出现1次数的`bit位`。  
+        最后再`各个 bit 位拼接`起来，就得到了只出现 1次 的数 
 */
 class Solution {
 public:
     int singleNumber(vector<int>& nums) {
         int res = 0;
-        for (int i = 0, sub = 0; i < 32; ++i, sub = 0) {
-            for (auto &n : nums)
-                sub += ((n >> i) & 1);
-            if (sub % 3)
+        for (int i = 0; i < 32; ++i) { // 遍历每一位
+            // 位求和
+            int sum = 0;
+            for (int n:nums)
+                sum += ((n >> i) & 1);
+            // % 3
+            if (sum % 3 == 1)
                 res |= (1 << i);
         }
+
         return res;
     }
 };
@@ -4041,21 +4075,26 @@ public:
 
 ```C++
 /*
+    以两个元素高度为容器的左右边界，求容器可以储存的最大水量。
+    双指针 + 贪心
 */
 class Solution {
 public:
     int maxArea(vector<int>& height) {
-        int l=0, r=height.size()-1;
         int ans = 0; // 最大存水量
-        while(l<r){
-            int area = min(height[l],height[r])*(r-l); // 当前存水量
-            ans = max(ans,area);
-            if(height[l]<=height[r]) // 关键在于每次移动高度小的那边。
+
+        int l=0, r=height.size()-1;
+        while(l < r) {
+            int area = min(height[l],height[r]) * (r-l); // 当前存水量
+            ans = max(ans, area); // 贪心
+
+            if(height[l] <= height[r]) // 关键在于每次移动高度小的那边。
                                      // 因为移动高的不可能让水面更高，但积水宽度却变小了，总的面积一定更小
                 l++;
             else
                 r--;
         }
+
         return ans;
     }
 };
@@ -4067,48 +4106,33 @@ public:
 
 ```C++
 /*
+    输出所有和为 target 的连续正整数序列（至少含有两个数）
 */
 class Solution {
 public:
     vector<vector<int>> findContinuousSequence(int target) {
         vector<vector<int>> res;
+
         int l=1, r=2; // 正整数从1,2开始
-        while(l<r){// 类似于滑动窗口，实际上这个滑动窗口枚举的是左边界
-            int sum = (l+r)*(r-l+1)/2;// 等差数列求和
+        while(l < r){ // 类似于滑动窗口，实际上这个滑动窗口枚举的是左边界
+            int sum = (l+r)*(r-l+1)/2; // 等差数列求和
+
             if(sum == target){
+                // 添加结果
                 vector<int> tmp;
-                for(int i=l;i<=r;i++)
+                for(int i=l; i<=r; i++)
                     tmp.push_back(i);
                 res.push_back(tmp);
-                l++;// 移动窗口左边界，此时移动右边界不可能再等于target，只会更大
+
+                l++; // 移动窗口左边界，此时移动右边界不可能再等于target，只会更大
             }
-            else if(sum > target)// 窗口内和大于目标值，移动左边界，小于移动右边界
+            else if(sum > target) // 窗口内的和 大于 目标值，移动 左边界
                 l++;
-            else 
+            else                  // 小于 目标值，移动 右边界
                 r++;
         }
+
         return res;
-    }
-};
-// 时间复杂度：**O(n)**  
-// 空间复杂度：**O(1)**
-```
-
-### [面试题-10.01.合并排序的数组](../Coding\双指针\面试题-10.01.合并排序的数组.md)
-
-```C++
-/*
-*/
-class Solution {
-public:
-    void merge(vector<int>& A, int m, vector<int>& B, int n) {
-        int a = m-1, b = n-1, c = m+n-1; // 倒序
-        while(a<c){ // a等于c了，说明b减为0了
-            if(a==-1 || A[a] < B[b])
-                A[c--] = B[b--];
-            else
-                A[c--] = A[a--];
-        }
     }
 };
 // 时间复杂度：**O(n)**  
@@ -4121,21 +4145,27 @@ public:
 
 ```C++
 /*
-*/
-//  自己写的贪心解法 
+    判断 s 是否为 t 的子序列
+    贪心
+        如果s是t的子序列，那么s中的每个字符在t中的顺序和在s中的顺序是一致的，只需要贪心的在t中依次查找s中的每个字符即可
+*/ 
 class Solution {
 public:
     bool isSubsequence(string s, string t) {
-        if(s.size()==0)return true;
-        if(t.size()==0)return false;
-        int k=0;
-        for(char T:t){
-            if(T==s[k]){
+        if(s.size()==0)
+            return true;
+        if(t.size()==0)
+            return false;
+
+        int k=0; // s中的下标
+        for(char T:t) {
+            if(T == s[k]) {
                 k++;
-                if(k==s.size())
+                if(k == s.size())
                     return true;
             }
         }
+
         return false;
     }
 };
@@ -4147,29 +4177,15 @@ public:
 
 ```C++
 /*
+    给你一个数组 nums，请你从中抽取一个子序列，满足该子序列的元素之和 严格 大于未包含在该子序列中的各元素之和。  
+    如果存在多个解决方案，只需返回 长度最小 的子序列。如果仍然有多个解决方案，则返回 元素之和最大 的子序列。 
+
+    排序：按降序排序，然后从前往后取数即可
 */
 class Solution {
 public:
-    vector<int> minSubsequence(vector<int>& nums) {
-        sort(nums.begin(),nums.end(),greater<int>());//greater是一个模板函数，用于比较
-        int sum = 0;
-        for(int v:nums)
-            sum+=v;
-        int ts = 0;
-        for(int i =0;i<nums.size();i++)
-        {
-            ts += nums[i];
-            if(ts > sum-ts)
-                return vector<int>(nums.begin(),nums.begin()+i+1);//这里构造不取右界，所有+1,才能取到i
-        }
-        return nums;//只有一个元素，或者没有元素时返回
-    }
-};
-// 自己写的解法
-class Solution {
-public:
     void quicksort(vector<int>& nums,int L,int R){// 从大到小快排
-        if(L>=R)// 注意不能漏
+        if(L>=R)
             return;
         int p = rand()%(R-L+1)+L;
         swap(nums[L],nums[p]);
@@ -4183,21 +4199,25 @@ public:
     }
     vector<int> minSubsequence(vector<int>& nums) {
         // 降序排序
-        srand((unsigned)time(nullptr));
+        // srand((unsigned)time(nullptr));
         quicksort(nums,0,nums.size()-1);
+
         // 求和
         int sum = 0;
         for(int i:nums)
             sum += i;
+
         // 计算结果
-        int tmp = 0;
+        int suml = 0;
         vector<int> res;
-        for(int i=0;i<nums.size();i++){
-            tmp += nums[i];
+        for(int i=0; i<nums.size(); i++){
+            suml += nums[i];
             res.push_back(nums[i]);
-            if(tmp > sum - tmp)
+
+            if(suml > sum - suml)
                 break;
         }
+
         return res;
     }
 };
@@ -4209,15 +4229,15 @@ public:
 
 ```C++
 /*
+    一开始有n瓶酒，ex个空瓶子可以换一瓶酒，求最多 可以喝到多少瓶水
+    数学：
+        每次用ex换能多喝1瓶，每换一次，总的瓶子数就会减少ex-1，损失ex-1个瓶子，(n-ex)/(ex-1)+1为能换多少次（能损失多少次），每损失一次，就能多喝一瓶，因此(n-ex)/(ex-1)+1也就是能多喝几瓶，加上一开始喝的n即为总的能喝几瓶。
 */
 class Solution {
 public:
-    // 思想是每次用ex换能多喝1瓶，每换一次，总的瓶子数就会减少ex-1，损失ex-1个瓶子，(n-ex)/(ex-1)+1为能换多少次（能损失多少次），每损失一次，就能多喝一瓶，因此(n-ex)/(ex-1)+1也就是能多喝几瓶，加上一开始喝的n即为总的能喝几瓶。
     int numWaterBottles(int n, int ex) {
-        // return (n*ex-1)/(ex-1);
-        // return (n-1)/(ex-1)+n;// 三种方法是等价的，可以相互推出
-        return n>=ex?(n-ex)/(ex-1)+1+n:n;// +1的目的是保证(n-ex)/(ex-1) < n_exchange一定成立，因为(n-ex)/(ex-1)是整数除，会舍弃小数部分，+1就一定能满足这个不等式。或者可以理解为(n-ex)里减去的ex 和 (n-ex)/(ex-1)结果的小数部分加在一起，一定能再换一瓶。
-    }                               // 注意这个+1的目的
+        return n >= ex ? (n-ex)/(ex-1)+1+n : n; // +1是因为(n-ex)里减去的ex 和 (n-ex)/(ex-1)结果的小数部分加在一起，一定能再换一瓶。
+    }
 };
 // 时间复杂度：**O(1)**  
 // 空间复杂度：**O(1)**
@@ -4225,7 +4245,7 @@ public:
 
 ## 14、图 {#customname14}
 
-### [剑指](../)
+### [](../)
 
 ## 15、位运算 {#customname15}
 
@@ -4233,16 +4253,22 @@ public:
 
 ```C++
 /*
+    不使用 运算符 + 和 - ​​​​​​​，计算并返回两整数之和。
+    异或得到无进位加法结果，相与并左移一位得到进位结果  
 */
 class Solution {
 public:
     int getSum(int a, int b) {
-        while(b!=0){ // 进位不为0，就一直加，这里一定要是不等于0，才能处理负数
-            int tmp = a^b; // 异或得到无进位加法结果
-            b = (unsigned)(a&b)<<1; // 相与并左移一位得到进位结果
-            a = tmp; // a赋值为无进位加法结果
+
+        while(b != 0){ // 进位不为0，就一直加，这里一定要是不等于0，才能处理负数
+            int xor_ = a^b; // 异或 得到 无进位加法结果
+            int and_ = (unsigned)(a&b)<<1; // 相与并左移一位 得到 进位结果
+
+            a = xor_; // a 赋值为 无进位加法结果
+            b = and_; // b 赋值为 进位结果
         }
-        return a; // 当while退出时，进位b为0，那么上一次的无进位加法结果就是最终的和，也就是a
+
+        return a; // 进位 b 为 0 时，上一次的 无进位加法结果 a 就是最终的和
     }
 };
 // 时间复杂度：**O(n)**  
@@ -4253,19 +4279,19 @@ public:
 
 ```C++
 /*
+    将数组中的元素按照其二进制表示中数字 1 的数目升序排序，数目相同则 按值 升序排序
 */
-// sort函数结合lambda表达式，(1710. 卡车上的最大单元数)也用过
-// 自己的解法
 class Solution {
 public:
-    void quicksort(vector<int>& nums,int L,int R,vector<int>& bit){
-        if(L>=R)        // 递归终止条件不能忘
+    void quicksort(vector<int>& nums, int L, int R, vector<int>& bit){
+        if(L>=R)
             return;
         int p = rand()%(R-L+1)+L;
         swap(nums[R],nums[p]);
         int i = L-1;
         for(int j=L;j<=R-1;j++)
-            if(bit[nums[j]]<bit[nums[R]] || (bit[nums[j]]==bit[nums[R]] && nums[j]<=nums[R] ))// 按二进制中1的个数升序排序，个数相同按数值升序
+            if(bit[nums[j]]<bit[nums[R]] ||
+               (bit[nums[j]]==bit[nums[R]] && nums[j]<=nums[R] )) // 按二进制中1的个数升序排序，个数相同按数值升序
                 swap(nums[++i],nums[j]);
         swap(nums[++i],nums[R]);
         quicksort(nums,L,i-1,bit);
@@ -4277,6 +4303,7 @@ public:
             bit[i] = bit[i>>1] + (i&1); //递推求解，i右移一位后的1的个数在之前已经被求出，再加上i的最后一位，得到i的二进制中1的个数
         // srand((unsigned)time(nullptr));
         quicksort(arr,0,arr.size()-1,bit);
+
         return arr;
     }
 };
@@ -4288,22 +4315,27 @@ public:
 
 ```C++
 /*
+    给定一个32位整数 num，你可以将一个数位从0变为1。请编写一个程序，找出你能够获得的最长的一串1的长度。
+    双指针 + 位运算 + 贪心
 */
 class Solution{
 public:
-    // 思路很好，特别是l=r+1
+    // 思路很好，特别是 r = l+1
     int reverseBits(int num) {
-        int l=0,r=0,Max=0; // 以0为分界点，L是0左边连续1的数量+1（翻转的0），R是0右边连续1的数量，Max记录最大值
-        for(int i=0;i<32;i++){
-            if((num&1)==1)
-                r++;
-            else{ // 注意理解这里，遇到0的处理方式
-                l = r+1; // 当遇见0时， 0的左边连续1的数量等于上一个0右边连续1的数量加一（当前0本身反转后算一个长度）
-                r = 0;
+        int l=0,r=0,Max=0; // 以0为分界点，r是0右边连续1的数量+1（分界点0翻转为1），l是0左边连续1的数量，Max记录最大值
+
+        for(int i=0; i<32; i++) { // 循环32次
+            if((num&1) == 1)
+                l++;
+            else {
+                r = l+1;
+                l = 0;
             }
-            Max = max(l+r,Max);
+            Max = max(Max, l+r);
+
             num >>= 1;
         }
+
         return Max;
     }
 };
@@ -4315,14 +4347,25 @@ public:
 
 ```C++
 /*
+    数组nums包含从0到n的所有整数，但其中缺了一个，找出缺失的数字
+    位运算：
+        异或：相异为1，相同为0
+        a^a = 0  
+        a^a^b = b
+
+        值域为[0,n]缺了一个数，下标为[0,n-1]，  
+        如果缺的是n，下标和值的最后的异或结果就是0，再返回与n的异或 0^n = n  
+        如果缺的不是n，最后的异或结果就是与缺失的元素相等的下标i和n的异或 i^n，再返回与n的异或 i^n^n = i
 */
 class Solution {
 public:
     int missingNumber(vector<int>& nums) {
         int n = nums.size();
+
         int tmp = 0;
-        for(int i=0;i<nums.size();++i)
+        for(int i=0; i<nums.size(); ++i)
             tmp ^= i^nums[i];
+
         return n^tmp;
     }
 };
@@ -4336,18 +4379,21 @@ public:
 
 ```C++
 /*
+    设计一个支持 push ，pop ，top 操作，并能在常数时间内检索到最小元素的栈。 
 */
 class MinStack {
     stack<int> x_stack;
     stack<int> min_stack;// 存储最小值的辅助栈，栈顶元素为目前为止x_stack中最小元素
 public:
     MinStack() {
+        // 关键
         min_stack.push(INT_MAX);
     }
     
     void push(int x) {
         x_stack.push(x);
-        min_stack.push(min(min_stack.top(), x));// 入栈一个考虑x后的最小值
+        // 关键
+        min_stack.push( min(min_stack.top(), x) ); // 入栈一个 当前元素 和 栈顶元素 的最小值
     }
     
     void pop() {
@@ -4369,6 +4415,9 @@ public:
 
 ```C++
 /*
+    用队列实现栈：
+    每push进队列一个元素，就把队列里这个元素之前的元素全部出队，再入队
+    这样刚刚push的元素就到了队首
 */
 class MyStack225 {
 public:
@@ -4381,9 +4430,9 @@ public:
 
     /** Push element x onto stack. */
     void push(int x) {
-        int n = q.size();
         q.push(x);
-        for (int i = 0; i < n; i++) {
+
+        for (int i=0; i < q.size()-1; i++) { // 操作 x 前面的所有元素
             q.push(q.front());
             q.pop();
         }
@@ -4391,15 +4440,13 @@ public:
     
     /** Removes the element on top of the stack and returns that element. */
     int pop() {
-        int r = q.front();
-        q.pop();
+        int r = q.front(); q.pop();
         return r;
     }
     
     /** Get the top element. */
     int top() {
-        int r = q.front();
-        return r;
+        return q.front();
     }
     
     /** Returns whether the stack is empty. */
@@ -4413,10 +4460,15 @@ public:
 
 ```C++
 /*
+    两个栈实现队列
+    s1栈用来模拟队尾，s2栈用来模拟队首，
+    push到s1栈，
+    pop和top时从s2栈拿，如果s2栈为空，就s1栈的元素依次出栈，入到s2栈里。
 */
-class MyQueue {// 双栈
+class MyQueue { // 双栈
 public:
-    stack<int> s1,s2;
+    stack<int> s1; // 模拟 队尾
+    stack<int> s2; // 模拟 队首
     /** Initialize your data structure here. */
     MyQueue() {
         
@@ -4429,37 +4481,32 @@ public:
     
     /** Removes the element from in front of queue and returns that element. */
     int pop() {
-        if(s2.empty())
-        {
-            while(!s1.empty())
-            {
-                int number = s1.top();
-                s2.push(number);
+        if(s2.empty()) {
+            while(!s1.empty()) {
+                s2.push(s1.top());
                 s1.pop();
             }
         }
-        int i = s2.top();
-        s2.pop();
+        int i = s2.top(); s2.pop();
+
         return i;
     }
     
     /** Get the front element. */
     int peek() {
-        if(s2.empty())
-        {
-            while(!s1.empty())
-            {
-                int number = s1.top();
-                s2.push(number);
+        if(s2.empty()) {
+            while(!s1.empty()) {
+                s2.push(s1.top());
                 s1.pop();
             }
         }
+
         return s2.top();
     }
     
     /** Returns whether the queue is empty. */
     bool empty() {
-        return s1.empty()&&s2.empty();
+        return s1.empty() && s2.empty();
     }
 };
 ```
@@ -4468,22 +4515,29 @@ public:
 
 ```C++
 /*
+    同 739.每日温度
+    单调栈
+    因为 nums1 是 nums2 的子集，所以先处理nums2，为nums2中每个元素都找到下一个更大的元素，然后遍历nums1，去nums2里找答案即可
 */
-// 自己写的解法
 class Solution {
-public: // 单调栈，从后往前遍历构造
+public:
     vector<int> nextGreaterElement(vector<int>& nums1, vector<int>& nums2) {
-        unordered_map<int,int> mp;
-        stack<int> S;
-        for(int i=nums2.size()-1; i>=0; i--){ // 构建单调栈
-            while(!S.empty() && S.top()<=nums2[i])
+        unordered_map<int,int> mp; // 键为 nums2中的元素， 值为 下一个更大的元素
+
+        stack<int> S; // 单调栈
+        for(int i=0; i<nums2.size(); i++) {
+            while(!S.empty() && S.top() < nums2[i]) {
+                mp[S.top()] = nums2[i];
                 S.pop();
-            mp[nums2[i]] = S.empty()?-1:S.top();
+            }
+
             S.push(nums2[i]);
         }
+
         vector<int> res;
         for(int i:nums1) // 获取结果
-            res.push_back(mp[i]);
+            res.push_back( mp.find(i)==mp.end() ? -1 : mp[i]);
+
         return res;
     }
 };
@@ -4493,20 +4547,27 @@ public: // 单调栈，从后往前遍历构造
 
 ```C++
 /*
+    用一个新栈stk来实时模拟进出栈操作：  
+        在for里依次喂数，每push一个数字就检查有没有能pop出来的。  
+        如果最后stk为空，说明一进一出刚刚好。 
 */
 class Solution31 {
 public:
     bool validateStackSequences(vector<int>& pushed, vector<int>& popped) {
-        if(pushed.size() != popped.size()) return false;
+        if(pushed.size() != popped.size())
+            return false;
+
+        int i = 0; // 弹出序列 popped 的下标
         stack<int> stk;
-        int i = 0;
         for(auto x : pushed){
             stk.push(x);
-            while(!stk.empty() && stk.top() == popped[i]){
+
+            while(!stk.empty() && stk.top() == popped[i]) {
                 stk.pop();
                 i++;
             }
         }
+
         return stk.empty();
     }
 };
@@ -4518,20 +4579,28 @@ public:
 
 ```C++
 /*
+    不含有重复字符的 最长子串 的长度
+    滑动窗口：
+        最基本的思路是枚举子串的最后一个字符，假设有n个字符，每个字符都可以作为子串的最后一个字符，
+        那么就有n个无重复字符的子串，分别以这n个字符结尾，这n个子串中最大的长度就是答案。
+
+        如何求这n个无重复字符的子串，直观的思路是枚举每个字符，作为子串的最后一个字符，然后子串的第一字符从最左边的字符开始枚举，直到满足无重复字符。但是这样的枚举过程存在冗余，因为假设下标范围(a,b)是以b结尾的最长无重复字符子串，那么以b+1结尾的最长无重复字符子串一定小于等于(a,b+1)，因此采用滑动窗口，枚举右边界，然后不断的移动左边界
 */
 class Solution {
 public:
     int lengthOfLongestSubstring(string s) {
         unordered_set<char> sets;   // 哈希集合，记录每个字符是否出现过
-        int n = s.size();
-        int l=0;    // l为右指针，初始值为0，相当于我们在字符串的左边界，还没有开始移动
-        int ans = 0;// 初始长度为0，s为空时，直接返回0
-        for(int r=0;r<n;r++){   // 枚举所有滑动窗口的新的右端点
+        int ans = 0;
+
+        int l=0, r=0; // 滑动窗口左右端点
+        for(; r<s.size(); r++) {   // 枚举所有滑动窗口的右端点
             while(l<r && sets.find(s[r])!=sets.end())//如果右端点的值已经存在集合中，就右移左端点并丢弃左边界元素，直到新的右端点的值不在集合中
                 sets.erase(s[l++]); // 左指针向右移动一格，移除一个字符
-            sets.insert(s[r]);// 将右端点的值加入集合，此时窗口为以新右端点为右边界的最大窗口
-            ans = max(ans,r-l+1);// 更新最大长度
+            sets.insert(s[r]); // 将右端点的值加入集合
+
+            ans = max(ans, r-l+1); // 更新最大长度
         }
+
         return ans;
     }
 };
@@ -4543,8 +4612,10 @@ public:
 
 ```C++
 /*
+    求字符串 s 的 最长回文子串
+    中心扩展法 + 贪心
 */
-class Solution { // 中心扩展法 + 贪心
+class Solution {
 public:
     pair<int,int> expend1(string& s,int L,int R){
         while(L>=0 && R<=s.size()-1 && s[L]==s[R]){// 注意边界条件
@@ -4554,21 +4625,23 @@ public:
         return {L+1,R-1};
     }
     string longestPalindrome(string s) {
-        int start=0,end=0;
-        for(int i=0;i<s.size();i++){// 枚举回文中心
+        int start=0, end=0; // 最长回文子串 的左右边界下标
+
+        for(int i=0; i<s.size(); i++) {// 枚举回文中心
             pair<int,int> p1 = expend1(s,i,i); // 回文中心是一个字符，回文串长度为奇数
             pair<int,int> p2 = expend1(s,i,i+1); // 回文中心是两个字符，回文串长度为偶数
-            if(p1.second-p1.first > end-start){// 注意是R-L，不能反，更新最长长度
+
+            if(p1.second-p1.first > end-start) {// 更新最长长度
                 start = p1.first;
                 end   = p1.second;
             }
-            if(p2.second-p2.first > end-start){
+            if(p2.second-p2.first > end-start) {
                 start = p2.first;
                 end   = p2.second;
             }
         }
-        return s.substr(start,end-start+1);
 
+        return s.substr(start, end-start+1);
     }
 };
 // time：O(n²)
@@ -4579,8 +4652,8 @@ public:
 
 ```C++
 /*
+    回溯
 */
-// 自己写的解法
 class Solution {
 public:
     unordered_map<char,string> mp{
@@ -4592,25 +4665,26 @@ public:
             {'7', "pqrs"},
             {'8', "tuv"},
             {'9', "wxyz"}};
-    string digit;
-    void backtrack(vector<string>& ans,string& tmp,int idx){
-        if(idx == digit.size())
+    void backtrack(vector<string>& ans, string& tmp, string& digits, int idx) {
+        if(idx == digits.size()) {
             ans.push_back(tmp);
-        else{
-            for(char i:mp[digit[idx]]){
-                tmp.push_back(i);
-                backtrack(ans,tmp,idx+1);
-                tmp.pop_back();
-            }
+            return;
+        }
+
+        for(char i : mp[digits[idx]]) {
+            tmp.push_back(i);
+            backtrack(ans, tmp, digits, idx+1);
+            tmp.pop_back();
         }
     }
     vector<string> letterCombinations(string digits) {
         vector<string> ans;
         if(digits.empty())
             return ans;
+
         string tmp; // 存储回溯结果
-        digit = digits; // 用于遍历
-        backtrack(ans,tmp,0); // 0是digit里的下标
+        backtrack(ans, tmp, digits, 0); // 0 是 digits 里的下标
+
         return ans;
     }
 };
@@ -4622,32 +4696,36 @@ public:
 
 ```C++
 /*
+    生成 n 对括号的所有 有效的 排列组合
+    回溯
 */
 class Solution {
 public:
-    void backward(vector<string>&res,string& tmp,int open,int close,int n){
-        // open、close分别为已有序列左右括号数量，n为要生成括号的对数
-        if(tmp.size() == 2*n){  // 找到一个完整有效的排列
+    void backward(vector<string>& res, string& tmp, int open, int close, int n) {
+        // open、close分别为已添加的左右括号数量，n为要生成括号的对数
+        if(tmp.size() == 2*n) {  // 找到一个完整有效的排列
             res.push_back(tmp);
             return;
         }
         
-        // 任意时候都可以添加左括号，但只有在添加过的左括号数大于添加过的右括号数时才可以添加右括号
-        if(open < n){   // 可以添加左括号就添加尝试一下
+        // 任意时候都可以 添加左括号
+        // 但左括号数 大于 右括号数时才可以 添加右括号
+        if(open < n) {       // 可以添加左括号就添加尝试一下
             tmp.push_back('(');
-            backward(res,tmp,open+1,close,n);
+            backward(res, tmp, open+1, close, n);
             tmp.pop_back(); // 关键
         }
-        if(open > close){   // 可以添加右括号就添加尝试一下
+        if(open > close) {   // 可以添加右括号就添加尝试一下
             tmp.push_back(')');
-            backward(res,tmp,open,close+1,n);
+            backward(res, tmp, open, close+1, n);
             tmp.pop_back(); // 关键
         }
     }
     vector<string> generateParenthesis(int n) {
-        vector<string> res;// 结果向量
+        vector<string> res;// 结果
         string tmp;// 用于存储当前枚举排列的字符串
-        backward(res,tmp,0,0,n);
+        backward(res, tmp, 0, 0, n);
+
         return res;
     }
 };
@@ -4659,24 +4737,32 @@ public:
 
 ```C++
 /*
+    给你一个字符串数组，请你将 字母异位词 组合在一起
+    计数（哈希）:
+        使用字符 + 出现次数 + 下一种字符 + 下一种字符的出现次数 +...，作为键
 */
 class Solution {
 public:
     vector<vector<string>> groupAnagrams(vector<string>& strs) {
         unordered_map<string,vector<string>> mp;
-        for(string i:strs){
+
+        for(string i:strs) {
+            // 统计字符串的字符个数
             vector<int> cnt(26);
-            for(char s:i) // 统计字符串i中的字符个数
+            for(char s:i)
                 cnt[s-'a']++;
+
             string key;
-            for(int i=0;i<26;i++) // 根据统计结果(cnt)构造哈希的key
-                // key += (char)('a'+i) + to_string(cnt[i]);// 注意这里构造字符串的方法
+            for(int i=0; i<26; i++) // 根据统计结果(cnt)构造哈希的key
                 key += to_string('a'+i) + to_string(cnt[i]);// 注意这里构造字符串的方法，'a'+i被提升为int
+
             mp[key].push_back(i); // 字符串i添加到对应的key
         }
+
         vector<vector<string>> res;
         for(pair<string,vector<string>> p:mp) // map中值放入结果
             res.push_back(p.second);
+
         return res;
     }
 };
@@ -4688,30 +4774,37 @@ public:
 
 ```C++
 /*
+    可以插入、删除、替换一个字符，求将 word1 转换成 word2 所使用的 最少操作数
+    动态规划
+        dp[i][j] 表示 A 的前 i 个字母和 B 的前 j 个字母之间的编辑距离
 */
 class Solution {
 public:
     int minDistance(string word1, string word2) {
         int m = word1.size();
         int n = word2.size();
-        if(m==0)return n;
-        if(n==0)return m;
-        vector<vector<int>> dp(m+1,vector<int>(n+1,0)); // dp[i][j] 表示 A 的前 i 个字母和 B 的前 j 个字母之间的编辑距离
-        // 边界条件
-        for(int i=0;i<=m;i++)
+
+        // dp[i][j] 表示 A 的前 i 个字母和 B 的前 j 个字母之间的 编辑距离
+        vector<vector<int>> dp( m+1, vector<int>(n+1, 0) );
+
+        // 其中一个字符串为空，需要删除或添加所有字符
+        for(int i=0; i<=m; i++)
             dp[i][0] = i;
-        for(int j=0;j<=n;j++)
+        for(int j=0; j<=n; j++)
             dp[0][j] = j;
         
-        for(int i=1;i<=m;i++)
-            for(int j=1;j<=n;j++)
-                if(word1[i-1] == word2[j-1]) // 注意这里是-1，
+        for(int i=1; i<=m; i++)
+            for(int j=1; j<=n; j++)
+                // 如果最后两个字符 相等
+                if(word1[i-1] == word2[j-1]) // 前i个字符和前j个字符，下标就是i-1和j-1
                     // dp[i-1][j]+1 表示删除word1中的第i个字符
                     // dp[i][j-1]+1 表示删除word2中的第j个字符
-                    dp[i][j] = min(dp[i-1][j]+1,min(dp[i][j-1]+1,dp[i-1][j-1])); // 如果最后两个字符相等
+                    dp[i][j] = min( dp[i-1][j]+1, min( dp[i][j-1]+1, dp[i-1][j-1] ) );
+                // 如果最后两个字符 不相等
                 else
                     // dp[i-1][j-1]+1 表示将word1中的第i个字符替换为word2中的第j个字符
-                    dp[i][j] = min(dp[i-1][j]+1,min(dp[i][j-1]+1,dp[i-1][j-1]+1)); // 如果最后两个字符不相等
+                    dp[i][j] = min( dp[i-1][j]+1, min( dp[i][j-1]+1, dp[i-1][j-1] +1 ) ); // 比上面最后多个+1
+
         return dp[m][n];
     }
 };
@@ -4723,6 +4816,10 @@ public:
 
 ```C++
 /*
+    判断是否可以用字典 wordDict 中出现的单词拼接出字符串 s
+    动态规划
+        dp[i] 表示字符串 s 前 i 个字符组成的字符串能否被拼出
+
 */
 class Solution {
 public:
@@ -4730,20 +4827,24 @@ public:
         // 单词加入集合，并记录最大长度
         unordered_set<string> sets;
         int maxlen = 0;
-        for(string i:wordDict){
+        for(string i : wordDict){
             sets.insert(i);
             maxlen = max(maxlen,(int)i.size());
         }
+
         // dp[i] 表示字符串 s 前 i 个字符组成的字符串 s[0..i-1] 是否能被空格拆分成若干个字典中出现的单词
-        vector<int> dp(s.size()+1,0);
+        vector<int> dp(s.size()+1, 0);
         dp[0] = 1;
-        for(int i=1;i<=s.size();i++)// 枚举所有状态
-            for(int j=i;j>=0 && j>=i-maxlen;j--) // 从dp[0]、dp[1]、...、dp[i-1]（不一定全用，只要发现可以转移，dp[i]就会被设为true）转移到dp[i]
+        for(int i=1; i<s.size()+1; i++) {// 枚举所有状态
+            for(int j=i; j>=0 && j>=i-maxlen; j--) { // 从dp[0]、dp[1]、...、dp[i-1]（不一定全用，只要发现可以转移，dp[i]就会被设为true）转移到dp[i]
                 // 这里倒序枚举分割点，分割点如果将最后一个单词分割得超过了字典中的最长单词，必然就没必要继续枚举下去了
-                if(dp[j] && sets.find(s.substr(j,i-j))!=sets.end()){ // 如果单词s.substr(j, i - j)存在于字典中，并且dp[j]为true，表示s[0,i]可以拆分，dp[i]设为true
+                if(dp[j] && sets.find(s.substr(j, i-j)) != sets.end()) { // 如果单词s.substr(j, i - j)存在于字典中，并且dp[j]为true，表示s[0,i]可以拆分，dp[i]设为true
                     dp[i] = 1;
                     break;
                 }
+            }
+        }
+
         return dp[s.size()];
     }
 };
@@ -4755,6 +4856,15 @@ public:
 
 ```C++
 /*
+    编码规则为: k[encoded_string]，表示其中方括号内部的 encoded_string 正好重复 k 次
+    栈：  
+        - 如果当前的字符为数位，解析出一个数字（连续的多个数位）并进栈
+        - 如果当前的字符为字母或者左括号，直接进栈
+        - 如果当前的字符为右括号，开始出栈，一直到左括号出栈，出栈序列反转后拼接成一个字符串，
+        - 此时取出栈顶的数字（此时栈顶一定是数字，想想为什么？），就是这个字符串应该出现的次数，
+        - 根据这个次数和字符串构造出新的字符串 并 进栈
+        - 重复如上操作，最终将栈中的元素按照从栈底到栈顶的顺序拼接起来，就得到了答案。
+        - 注意：这里可以用不定长数组来模拟栈操作，方便从栈底向栈顶遍历。
 */
 class Solution {
 public:
@@ -4819,6 +4929,8 @@ public:
 
 ```C++
 /*
+    滑动窗口
+    枚举滑动窗口内的字符种类数目（循环26次），先固定字符种类数，然后再每次都重头开始 滑动窗口找k个重复
 */
 class Solution {
 public:
@@ -4869,41 +4981,44 @@ public:
 
 ```C++
 /*
+    找到 s 中所有 p 的 异位词 的子串，返回这些子串的起始索引。
+    滑动窗口 + 哈希统计字符
 */
 class Solution {
 public:
-    bool check(int s_[],int p_[]){  //判断两个单词是否相同
-        for(int i=0;i<26;i++)
-            if(s_[i]!=p_[i])
+    bool check(int s_[], int p_[]) {  //判断两个单词是否是异位词
+        for(int i=0; i<26; i++)
+            if(s_[i] != p_[i])
                 return false;
         return true;
     }
     vector<int> findAnagrams(string s, string p) {
         vector<int> res;
-        if(p.size()>s.size())
+        if(p.size() > s.size())
             return res;
         // 采用数组代替哈希表，速度更快，但是要自己写判断函数
         int s_[26] = {0}; // 列表解析，每个元素都设为0
         int p_[26] = {0};
         // 统计p的字母
-        for(int i=0;i<p.size();i++){
+        for(int i=0; i<p.size(); i++){
             s_[s[i]-'a']++;
             p_[p[i]-'a']++;
         }
+
         // 判断初始窗口是否满足要求
         if(check(s_,p_))
             res.push_back(0);
-        // 指向窗口左右边界的双指针
-        int l=0;
-        int r=p.size()-1;
 
         // 滑动窗口
-        while(r<s.size()-1){
-            s_[s[++r]-'a']++; // 减一个字符
-            s_[s[l++]-'a']--; // 加一个字符
-            if(check(s_,p_)) // 判断是否是字母异位词
+        int l = 0;
+        int r = p.size()-1;
+        while(r < s.size()-1) {
+            s_[s[++r]-'a']++; // 加一个字符
+            s_[s[l++]-'a']--; // 减一个字符
+            if(check(s_, p_)) // 判断是否是字母异位词
                 res.push_back(l);
         }
+
         return res;
     }
 };
@@ -4915,6 +5030,8 @@ public:
 
 ```C++
 /*
+    判断字符串 s 是否可以通过由它的一个子串重复多次构成。
+    如果 s 是 s+s 去掉 头尾两个元素 后的子串，那么 s 就能由一个子串重复多次构成。
 */
 class Solution {
 public:
@@ -4958,6 +5075,9 @@ public:
 
 ```C++
 /*
+    求字符串 s 的最长回文子序列的 长度
+    动态规划
+        dp[i][j] 表示 s 的第 i 个字符到第 j 个字符组成的 子串 中，最长的回文序列的长度
 */
 class Solution {
 public:
@@ -4965,14 +5085,17 @@ public:
         int n = s.size();
         // dp[i][j] 表示s的第i个字符到第j个字符组成的子串中，最长的回文序列长度
         vector<vector<int>> dp(n,vector<int>(n));
-        for(int i=n-1;i>=0;i--){ // i从最后一个字符往前遍历，作为区间左端点
+
+        for(int i=n-1; i>=0; i--) { // i从最后一个字符往前遍历，作为区间左端点
             dp[i][i] = 1; // 第i个字符是长度为1的回文子串
-            for(int j=i+1;j<n;j++) // j从i+1开始往后遍历，作为区间右端点
-                if(s[i]==s[j])
+            for(int j=i+1; j<n; j++) { // j从i+1开始往后遍历，作为区间右端点
+                if(s[i] == s[j])
                     dp[i][j] = dp[i+1][j-1] + 2;
                 else
-                    dp[i][j] = max(dp[i+1][j],dp[i][j-1]);// 取长度比[i,j]小1的区间的最大值
+                    dp[i][j] = max(dp[i+1][j], dp[i][j-1]); // 取长度比[i,j]小1的区间的最大值
+            }
         }
+
         return dp[0][n-1];
     }
 };
@@ -4984,6 +5107,8 @@ public:
 
 ```C++
 /*
+    求字符串 s 中 回文子串 的数目
+    中心扩展法
 */
 class Solution {
 public:
@@ -4992,14 +5117,15 @@ public:
         while(L>=0 && R<=s.size()-1 && s[L]==s[R]){
             L--;
             R++;
-            count++;// 注意这里，每扩一次就+1
+            count++; // 注意这里，每扩一次就+1
         }
     }
     int countSubstrings(string s) {
-        for(int i=0;i<s.size();i++){
+        for(int i=0; i<s.size(); i++) { // 枚举回文中心
             expend(s,i,i); // 长度为奇数
             expend(s,i,i+1); // 长度为偶数
         }
+
         return count;
     }
 };
@@ -5011,10 +5137,16 @@ public:
 
 ```C++
 /*
+    给定一个非空字符串 s，最多删除一个字符。判断是否能成为回文字符串。
+        方法一：
+            删除k个的问题就是求最长回文子序列的问题，求出了最长回文子序列长度后用总长度减去子序列长度再与k作比较即可
+                贪心 + 双指针
+        方法二：
+            模拟
 */
 class Solution {
 public:
-    bool check(string& s,int L,int R){
+    bool check(string& s,int L,int R){ // 判定是否是回文子串
         while(L<R){
             if(s[L]!=s[R])
                 return false;
@@ -5024,17 +5156,18 @@ public:
         return true;
     }
     bool validPalindrome(string s) { // 模拟删除一个字符
-        int L=0,R=s.size()-1;
+        int L=0, R=s.size()-1;
         while(L<R){
             if(s[L]==s[R]){
                 L++;
                 R--;
             }
             else    // 这个else只被执行一次，也就是最多删除一个字符
-                    // volidsubstr(s,start+1,end)为删除下标为start的字符
-                    // volidsubstr(s,start,end-1)为删除下标为end的字符
-                return check(s,L,R-1) || check(s,L+1,R); //采用这种方式能考虑处理多种情况
+                        // volidsubstr(s, L+1, R)为 删除下标为 L 的字符
+                        // volidsubstr(s, L, R-1)为 删除下标为 R 的字符
+                return check(s, L, R-1) || check(s, L+1, R);
         }
+
         return true;
     }
 };
@@ -5046,6 +5179,9 @@ public:
 
 ```C++
 /*
+    我们称一个数 X 是好数, 如果它的每位数字逐个地被旋转 180 度后，我们仍可以得到一个有效的，且和 X 不同的数
+    计算从 1 到 N 中有多少个数 X 是好数
+    动态规划
 */
 class Solution {
 public:
@@ -5055,11 +5191,11 @@ public:
         for(int i=1;i<=N;i++){
             if(i==3||i==4||i==7||
                 dp[i%10]==1||dp[i/10]==1){ // 或者个位不是好数，或者去掉个位后不是好数
-                    dp[i]=1;
+                    dp[i]=1; // i不是好数
                 }
             else if(i==2||i==5||i==6||i==9||// 进入这个else if时i就每一位都不是3,4,7，只能是1,2,3,6,8,9其中之一
                 dp[i%10]==2||dp[i/10]==2){ // 或者个位是好数，或者去掉个位后是好数
-                    dp[i]=2;
+                    dp[i]=2; // i是好数
                     count++;
                 }
         }
@@ -5072,6 +5208,9 @@ public:
 
 ```C++
 /*
+    求两个字符串的最大公因子串
+    数学：
+        如果 str1 和 str2 拼接后等于 str2和 str1 拼接起来的字符串（注意拼接顺序不同），那么一定存在符合条件的字符串 X。str1和str2都可以用X多次拼接得到
 */
 class Solution {
 public:
@@ -5085,27 +5224,32 @@ public:
 
 ```C++
 /*
+    求字符串的全排列，排列不能重复
+    回溯，使用哈希集合去重
 */
 class Solution {
 public:
-    void fullarray(unordered_set<string>& sets,string& tmp,int idx){
-        if(idx == tmp.size()){
-            if(sets.find(tmp)==sets.end())
+    void fullarray(unordered_set<string>& sets, string& tmp, int idx) {
+        if(idx == tmp.size()) {
+            if(sets.find(tmp) == sets.end())
                 sets.insert(tmp);
             return;
         }
-        for(int i=idx;i<tmp.size();i++){
+
+        for(int i=idx; i<tmp.size(); i++) {
             swap(tmp[idx],tmp[i]);
-            fullarray(sets,tmp,idx+1);
+            fullarray(sets, tmp, idx+1);
             swap(tmp[idx],tmp[i]);
         }
     }
     vector<string> permutation(string s) {
         unordered_set<string> sets;
         fullarray(sets,s,0);
+
         vector<string> res;
-        for(string i:sets)
+        for(string i : sets)
             res.push_back(i);
+
         return res;
     }
 };
@@ -5115,20 +5259,32 @@ public:
 
 ```C++
 /*
+    实现atoi
 */
 class Solution {
 public:
     int strToInt(string str) {
-        int i = 0, flag = 1; // 默认flag = 1，正数
+        int i = 0; // str的下标
+        int flag = 1; // 默认flag = 1，正数
         long res = 0;
+
+        // 去除空格
         while (str[i] == ' ') i++;
+
+        // 负数
         if (str[i] == '-') flag = -1;
+
+        // 跳过正负号
         if (str[i] == '-' || str[i] == '+') i++;
-        for (; i < str.size() && isdigit(str[i]); i ++)  {
-            res = res * 10 + (str[i] - '0');
-            if (res >= INT_MAX && flag == 1) return  INT_MAX;
-            if (res > INT_MAX && flag == -1) return  INT_MIN;
-        } 
+
+        // 字符串 转 整数
+        for (; i < str.size() && isdigit(str[i]); i++)  {
+            res = res * 10 + (str[i] - '0'); // 关键
+
+            if (flag == 1  && res >= INT_MAX) return INT_MAX;
+            if (flag == -1 && res >  INT_MAX) return INT_MIN;
+        }
+
         return flag * res;
     }
 };
